@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">ObjetConnecteApplication</string>
+    <string name="ventilateur">Ventilateur</string>
+    <string name="donnees">Données</string>
+    <string name="temperature">Temperature: 24°C</string>
+    <string name="humidit">Humidité: 10%</string>
+    <string name="ventilation_titre">Ventilation</string>
+    <string name="eteinte">Éteinte</string>
+    <string name="allume">Allumé</string>
+    <string name="vitesse_titre">Vitesse</string>
+    <string name="couleur_led_titre">Couleur LED</string>
+    <string name="modifier_la_couleur">Modifier la couleur</string>
+    <string name="temp_rature_titre">Température</string>
+    <string name="temperature_type_f">°F</string>
+    <string name="temperature_type_c">°C</string>
+</resources>

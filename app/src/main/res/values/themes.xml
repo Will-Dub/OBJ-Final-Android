@@ -1,0 +1,23 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme -->
+    <style name="Base.Theme.ObjetConnecteApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Light theme customization -->
+        <item name="colorPrimary">@color/colorPrimary</item> <!-- Primary color for the app -->
+        <item name="colorOnPrimary">@color/colorOnPrimary</item> <!-- Text or icon color on the primary color -->
+
+        <item name="colorSecondary">@color/colorSecondary</item> <!-- Secondary color for buttons, highlights -->
+        <item name="colorOnSecondary">@color/colorOnSecondary</item> <!-- Text or icon color on secondary -->
+
+        <!-- Button colors -->
+        <item name="buttonStyle">@style/ButtonStyle</item>
+    </style>
+
+    <!-- Custom Button Style -->
+    <style name="ButtonStyle">
+        <item name="android:backgroundTint">@color/colorButtonBackground</item>
+        <item name="android:textColor">@color/colorButtonText</item>
+    </style>
+
+    <!-- Full application theme (inherits base theme) -->
+    <style name="Theme.ObjetConnecteApplication" parent="Base.Theme.ObjetConnecteApplication" />
+</resources>

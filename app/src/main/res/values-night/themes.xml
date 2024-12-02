@@ -1,0 +1,23 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Dark theme customization -->
+    <style name="Base.Theme.ObjetConnecteApplication.Dark" parent="Base.Theme.ObjetConnecteApplication">
+        <!-- Dark primary and secondary color customizations -->
+        <item name="colorPrimary">@color/colorPrimaryDark</item>
+        <item name="colorOnPrimary">@color/colorOnPrimaryDark</item>
+
+        <item name="colorSecondary">@color/colorSecondaryDark</item>
+        <item name="colorOnSecondary">@color/colorOnSecondaryDark</item>
+
+        <!-- Dark mode button style -->
+        <item name="buttonStyle">@style/ButtonStyleDark</item>
+    </style>
+
+    <!-- Custom Button Style -->
+    <style name="ButtonStyleDark">
+        <item name="android:backgroundTint">@color/colorButtonBackgroundDark</item>
+        <item name="android:textColor">@color/colorButtonTextDark</item>
+    </style>
+
+    <!-- Full application theme (inherits base theme) -->
+    <style name="Theme.ObjetConnecteApplication" parent="Base.Theme.ObjetConnecteApplication" />
+</resources>
