@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/accueil"
+        android:title="Accueil"
+        android:icon="@drawable/accueil"/>
+    <item
+        android:id="@+id/horaire"
+        android:title="Horaire"
+        android:icon="@drawable/horaire"/>
+    <item
+        android:id="@+id/reglages"
+        android:title="Réglages"
+        android:icon="@drawable/reglage"/>
+</menu>

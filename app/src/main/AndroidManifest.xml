@@ -22,7 +22,7 @@
             android:name=".HoraireFormActivity"
             android:exported="false" />
         <activity
-            android:name=".HoraireActivity"
+            android:name=".HoraireFragment"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

@@ -13,4 +13,6 @@
     <string name="temp_rature_titre">Température</string>
     <string name="temperature_type_f">°F</string>
     <string name="temperature_type_c">°C</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
