@@ -40,7 +40,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/btn_refresh_status"
             android:layout_width="30dp"
             android:layout_height="0dp"
             android:layout_marginStart="15dp"
@@ -61,10 +61,10 @@
             app:layout_constraintTop_toBottomOf="@+id/tv_donnees" />
 
         <TextView
-            android:id="@+id/tv_temperature2"
+            android:id="@+id/tv_humidite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/humidit"
+            android:text="@string/humidite"
             android:textSize="20sp"
             app:layout_constraintStart_toStartOf="@+id/tv_temperature"
             app:layout_constraintTop_toBottomOf="@+id/tv_temperature" />

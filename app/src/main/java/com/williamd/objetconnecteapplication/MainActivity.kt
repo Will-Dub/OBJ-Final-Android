@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity(), BottomNavigationView.OnNavigationItemS
     private lateinit var bottomNavigationView: BottomNavigationView
     private val accueilFragment = AccueilFragment()
     private val horaireFragment = HoraireFragment()
-    private val reglageFragment = HoraireFragment()
+    private val reglagesFragment = ReglagesFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity(), BottomNavigationView.OnNavigationItemS
             }
             R.id.reglages -> {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.flFragment, reglageFragment)
+                    .replace(R.id.flFragment, reglagesFragment)
                     .commit()
                 return true
             }

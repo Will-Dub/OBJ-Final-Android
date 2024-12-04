@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="Général">
+        <ListPreference
+            android:defaultValue="1"
+            android:dialogTitle="Sélectionner l'intervalle entre chaque récupération des données"
+            android:entries="@array/pref_fetch_values"
+            android:entryValues="@array/pref_values"
+            android:key="pref_fetch"
+            android:title="Intervalle entre récupération" />
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Serveur">
+        <EditTextPreference
+            android:key="pref_ip_connection"
+            android:title="Adresse ip"
+            android:dialogTitle="Entrer l'adresse ip du serveur"
+            android:inputType="text"
+            android:defaultValue="" />
+
+        <EditTextPreference
+            android:key="pref_port_connection"
+            android:title="Port"
+            android:dialogTitle="Entrer le port du serveur"
+            android:inputType="text"
+            android:defaultValue="8080" />
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Notifications">
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="pref_alerte_temperature"
+            android:title="Alertes température" />
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="pref_alerte_humidite"
+            android:title="Alertes humidité" />
+
+    </PreferenceCategory>
+</PreferenceScreen>
