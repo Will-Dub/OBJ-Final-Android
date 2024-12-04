@@ -9,6 +9,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SeekBar
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
@@ -16,6 +18,8 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.google.gson.Gson
+import com.google.gson.JsonParseException
+import com.google.gson.JsonSyntaxException
 import com.williamd.objetconnecteapplication.databinding.FragmentAccueilBinding
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -66,6 +70,46 @@ class AccueilFragment : Fragment() {
             refreshStatus()
         }
 
+        binding.seekBarVitesse.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                // Appelé lors du changement dans le progress de la bar
+                val newVitesse = binding.seekBarVitesse.progress
+
+                // Crée un nouveau thread pour envoyer la vitesse
+                val thread = Thread {
+                    sendPost(serverUrl + "/vitesse", "{\"vitesse\": $newVitesse}")
+                }
+                thread.start()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                // Appelé lorsque l'utilisateur commence à intéragir avec la bar
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                // Appelé lorsque l'utilisateur fini d'intéragir avec la bar
+            }
+        })
+
+        binding.switchVentilation.setOnCheckedChangeListener{ buttonView, isChecked ->
+            // Crée un nouveau thread pour envoyer le status
+            val thread = Thread {
+                sendPost(serverUrl + "/status", "{\"estAllume\": $isChecked}")
+            }
+            thread.start()
+        }
+
+        binding.switchTemperatureType.setOnCheckedChangeListener{ buttonView, isChecked ->
+            // Convertie le boolean en string
+            val typeTemperature = if (isChecked) "C" else "F"
+
+            // Crée un nouveau thread pour envoyer le status
+            val thread = Thread {
+                sendPost(serverUrl + "/typedegree", "{\"type\": \"$typeTemperature\"}")
+            }
+            thread.start()
+        }
+
         binding.btnModifierCouleur.setOnClickListener{
             // Crée un nouveau thread pour executer la requête POST
             val thread = Thread {
@@ -95,7 +139,9 @@ class AccueilFragment : Fragment() {
                     Log.e("ERREUR", "Erreur de connection`${response.code}")
                     null
                 }else{
-                    response.body?.string()
+                    val responseBody = response.body?.string()
+                    Log.d("ResponseBody", "Received response: $responseBody")
+                    responseBody
                 }
             }
         }
@@ -121,10 +167,6 @@ class AccueilFragment : Fragment() {
                 os.flush()
             }
 
-            // Affiche réponse serveur
-            Log.d("STATUS", conn.responseCode.toString())
-            Log.d("MSG", conn.responseMessage)
-
             conn.disconnect()
         }catch(e: Exception){
             e.printStackTrace()
@@ -134,34 +176,35 @@ class AccueilFragment : Fragment() {
 
     private fun refreshStatus(){
         val thread = Thread {
-            Log.i("THREAD_ACCUEIL", "Affichage d'un log asynchrone")
-
             val statusJson = getData("$serverUrl/status")
             if(statusJson != null){
-                Log.d("THREAD_ACCUEIL", statusJson)
-                val status = Gson().fromJson(statusJson, Status::class.java)
+                try {
+                    val status = Gson().fromJson(statusJson, Status::class.java)
 
-                handler.post{
-                    val formattedTemperature = getString(R.string.temperature, status.temperature)
-                    binding.tvTemperature.text = formattedTemperature
+                    handler.post {
+                        val formattedTemperature = getString(R.string.temperature, status.temperature)
+                        binding.tvTemperature.text = formattedTemperature
 
-                    val formattedHumidite = getString(R.string.humidite, status.humidite)
-                    binding.tvHumidite.text = formattedHumidite
+                        val formattedHumidite = getString(R.string.humidite, status.humidite)
+                        binding.tvHumidite.text = formattedHumidite
 
-                    binding.switchVentilation.isChecked = status.estAllume
-                    binding.seekBarVitesse.progress = status.vitesse.toInt()
+                        binding.switchVentilation.isChecked = status.estAllume
+                        binding.seekBarVitesse.progress = status.vitesse.toInt()
 
-                    // Degree C
-                    if(status.typeDegree == "C"){
-                        binding.switchTemperatureType.isChecked = true
+                        // Degree C
+                        if (status.typeDegree == "C") {
+                            binding.switchTemperatureType.isChecked = true
+                        }
+                        // Degree F
+                        else if (status.typeDegree == "F") {
+                            binding.switchTemperatureType.isChecked = false
+                        }
                     }
-                    // Degree F
-                    else if(status.typeDegree == "F"){
-                        binding.switchTemperatureType.isChecked = false
-                    }
+                } catch (e: JsonSyntaxException) {
+                    Log.e("THREAD_ACCUEIL", "Error parsing JSON: ${e.message}")
+                } catch (e: JsonParseException) {
+                    Log.e("THREAD_ACCUEIL", "Error parsing JSON structure: ${e.message}")
                 }
-            }else{
-                Log.d("THREAD_ACCUEIL", "null")
             }
         }
         thread.start()
