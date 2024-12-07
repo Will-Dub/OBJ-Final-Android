@@ -13,10 +13,10 @@ import androidx.preference.SwitchPreferenceCompat
 
 class ReglagesFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        //Load preferences
+        //Charge les préférences
         setPreferencesFromResource(R.xml.preferences, rootKey)
 
-        //Initialize the preferences
+        //Initialise les préférences
         PreferenceManager.setDefaultValues(requireContext(), R.xml.preferences, false)
     }
 }

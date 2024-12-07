@@ -20,9 +20,6 @@
             android:name=".ModificationLedActivity"
             android:exported="false" />
         <activity
-            android:name=".ConfigurationLedActivity"
-            android:exported="false" />
-        <activity
             android:name=".HoraireFormActivity"
             android:exported="false" />
         <activity

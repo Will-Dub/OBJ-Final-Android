@@ -118,6 +118,16 @@ class AccueilFragment : Fragment() {
             thread.start()
         }
 
+        binding.btnModifierCouleur.setOnClickListener{
+            val configurationFragment = ListeLedFragment()
+
+            // Remplace le fragment par la liste led
+            val transaction = parentFragmentManager.beginTransaction()
+            transaction.replace(R.id.flFragment, configurationFragment)
+            transaction.addToBackStack(null)
+            transaction.commit()
+        }
+
     }
 
     override fun onCreateView(
