@@ -25,7 +25,14 @@ class HoraireAdapter(private val context: Context, private val dataList: List<Ho
         val itemView = converView ?: LayoutInflater.from(context).inflate(R.layout.item_liste_horaire, parent, false)
 
         // Stocke les éléments de la vue
-        val tvDebut = itemView.findViewById<TextView>(R.id.tv_horaire_nom)
+        val tvDebut = itemView.findViewById<TextView>(R.id.tv_adapter_horaire_titre)
+        val tvType = itemView.findViewById<TextView>(R.id.tv_adapter_horaire_type)
+
+        if(currentItem.type == HoraireTypeEnum.ALLUME){
+            tvType.text = "Allumé"
+        }else if(currentItem.type == HoraireTypeEnum.ETEINT){
+            tvType.text = "Éteindre"
+        }
 
         tvDebut.text = currentItem.debut
 

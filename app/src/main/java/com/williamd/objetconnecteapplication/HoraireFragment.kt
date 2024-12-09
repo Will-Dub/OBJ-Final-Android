@@ -22,9 +22,9 @@ class HoraireFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val horaireList = mutableListOf(
-            Horaire("08:00", "12:00"),
-            Horaire("12:00", "14:00"),
-            Horaire("14:00", "18:00")
+            Horaire("08:00", HoraireTypeEnum.ALLUME),
+            Horaire("12:00", HoraireTypeEnum.ALLUME),
+            Horaire("14:00", HoraireTypeEnum.ALLUME)
         )
 
         val adapterHoraire = HoraireAdapter(requireContext(), horaireList)

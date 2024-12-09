@@ -41,7 +41,10 @@
         <ListView
             android:id="@+id/lv_programmation"
             android:layout_width="0dp"
-            android:layout_height="414dp"
+            android:layout_height="match_parent"
+            android:layout_margin="16dp"
+            android:divider="@null"
+            android:dividerHeight="10dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.2"

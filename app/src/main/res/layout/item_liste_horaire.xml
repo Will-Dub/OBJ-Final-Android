@@ -1,16 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:background="@drawable/customborder">
 
     <TextView
-        android:id="@+id/tv_horaire_nom"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="allo"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:id="@+id/tv_adapter_horaire_titre"
+        android:layout_width="164dp"
+        android:layout_height="30dp"
+        android:hint="@string/ventilateur"
+        android:textSize="24sp"
+        android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_adapter_horaire_debut"
+        android:layout_width="77dp"
+        android:layout_height="17dp"
+        android:layout_marginTop="5dp"
+        android:hint="8h00"
+        app:layout_constraintStart_toStartOf="@+id/tv_adapter_horaire_titre"
+        app:layout_constraintTop_toBottomOf="@+id/tv_adapter_horaire_titre" />
+
+    <TextView
+        android:id="@+id/tv_adapter_horaire_type"
+        android:layout_width="77dp"
+        android:layout_height="17dp"
+        android:layout_marginTop="5dp"
+        android:hint="Actif"
+        app:layout_constraintStart_toStartOf="@+id/tv_adapter_horaire_titre"
+        app:layout_constraintTop_toBottomOf="@+id/tv_adapter_horaire_debut" />
+
+    <Button
+        android:id="@+id/btn_adapter_horaire_supprimer"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:backgroundTint="#C31E1E"
+        android:text="Supprimer"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_adapter_horaire_titre" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
