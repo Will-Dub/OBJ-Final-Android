@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_marginTop="5dp"
-            android:text="@string/temperature"
+            android:hint="Température"
             android:textSize="20sp"
             app:layout_constraintStart_toStartOf="@+id/tv_donnees"
             app:layout_constraintTop_toBottomOf="@+id/tv_donnees" />
@@ -66,7 +66,7 @@
             android:id="@+id/tv_humidite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/humidite"
+            android:hint="Humidité"
             android:textSize="20sp"
             app:layout_constraintStart_toStartOf="@+id/tv_temperature"
             app:layout_constraintTop_toBottomOf="@+id/tv_temperature" />

@@ -5,9 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 
-class HoraireAdapter(private val context: Context, private val dataList: List<Horaire>): BaseAdapter() {
+class HoraireAdapter(private val context: Context, private val dataList: MutableList<Horaire>): BaseAdapter() {
     override fun getCount(): Int {
         return dataList.size
     }
@@ -25,8 +28,9 @@ class HoraireAdapter(private val context: Context, private val dataList: List<Ho
         val itemView = converView ?: LayoutInflater.from(context).inflate(R.layout.item_liste_horaire, parent, false)
 
         // Stocke les éléments de la vue
-        val tvDebut = itemView.findViewById<TextView>(R.id.tv_adapter_horaire_titre)
+        val tvTitre = itemView.findViewById<TextView>(R.id.tv_adapter_horaire_titre)
         val tvType = itemView.findViewById<TextView>(R.id.tv_adapter_horaire_type)
+        val btnDelete = itemView.findViewById<Button>(R.id.btn_adapter_horaire_supprimer)
 
         if(currentItem.type == HoraireTypeEnum.ALLUME){
             tvType.text = "Allumé"
@@ -34,9 +38,30 @@ class HoraireAdapter(private val context: Context, private val dataList: List<Ho
             tvType.text = "Éteindre"
         }
 
-        tvDebut.text = currentItem.debut
+        tvTitre.text = currentItem.debut
+
+        //Events
+        //Supprimer
+        btnDelete.setOnClickListener {
+            showDeleteConfirmationDialog(position)
+        }
 
         return itemView
+    }
+
+    private fun showDeleteConfirmationDialog(position: Int){
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle(R.string.horaire_delete_title)
+        builder.setMessage(R.string.horaire_delete_message)
+        builder.setPositiveButton(R.string.yes) { _, _ ->
+            dataList.removeAt(position)
+            notifyDataSetChanged()
+        }
+        builder.setNegativeButton(R.string.no) { dialog, _ ->
+            dialog.dismiss()
+        }
+        builder.show()
+
     }
 
 }

@@ -3,7 +3,7 @@
     <string name="ventilateur">Ventilateur</string>
     <string name="donnees">Données</string>
     <string name="temperature">Temperature: %1$.1f°C</string>
-    <string name="humidite">Humidite: %1$.0f%%</string>
+    <string name="humidite">Humidité: %1$.0f%%</string>
     <string name="ventilation_titre">Ventilation</string>
     <string name="eteinte">Éteinte</string>
     <string name="allume">Allumé</string>
@@ -13,8 +13,10 @@
     <string name="temp_rature_titre">Température</string>
     <string name="temperature_type_f">°F</string>
     <string name="temperature_type_c">°C</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="horaire_delete_title">Suppression</string>
+    <string name="horaire_delete_message">Êtes-vous sûr de vouloir supprimer cet horaire?</string>
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
 
     <string-array name="pref_fetch_values">
         <item>1 minutes</item>
