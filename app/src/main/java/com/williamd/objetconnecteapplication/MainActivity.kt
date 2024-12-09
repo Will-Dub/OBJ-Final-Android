@@ -11,9 +11,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity(), BottomNavigationView.OnNavigationItemSelectedListener {
     private lateinit var bottomNavigationView: BottomNavigationView
-    private val accueilFragment = AccueilFragment()
-    private val horaireFragment = HoraireFragment()
-    private val reglagesFragment = ReglagesFragment()
+
+    private fun getFragment(id: Int) = when (id) {
+        R.id.accueil -> AccueilFragment()
+        R.id.horaire -> HoraireFragment()
+        R.id.reglages -> ReglagesFragment()
+        else -> AccueilFragment()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,30 +25,20 @@ class MainActivity : AppCompatActivity(), BottomNavigationView.OnNavigationItemS
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView)
         bottomNavigationView.setOnNavigationItemSelectedListener(this)
-        bottomNavigationView.selectedItemId = R.id.accueil
+
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.flFragment, getFragment(R.id.accueil))
+                .commit()
+            bottomNavigationView.selectedItemId = R.id.accueil
+        }
     }
 
-    override fun onNavigationItemSelected(@NonNull item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.accueil -> {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.flFragment, accueilFragment)
-                    .commit()
-                return true
-            }
-            R.id.horaire -> {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.flFragment, horaireFragment)
-                    .commit()
-                return true
-            }
-            R.id.reglages -> {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.flFragment, reglagesFragment)
-                    .commit()
-                return true
-            }
-        }
-        return false
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.flFragment, getFragment(item.itemId))
+            .addToBackStack(null)
+            .commit()
+        return true
     }
 }

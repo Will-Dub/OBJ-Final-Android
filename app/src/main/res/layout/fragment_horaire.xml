@@ -41,11 +41,13 @@
         <ListView
             android:id="@+id/lv_programmation"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="414dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.2"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_programmation_titre" />
+            app:layout_constraintTop_toBottomOf="@+id/tv_programmation_titre"
+            app:layout_constraintVertical_bias="0.0" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <Button

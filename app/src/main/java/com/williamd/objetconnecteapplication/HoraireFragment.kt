@@ -21,6 +21,15 @@ class HoraireFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val horaireList = mutableListOf(
+            Horaire("08:00", "12:00"),
+            Horaire("12:00", "14:00"),
+            Horaire("14:00", "18:00")
+        )
+
+        val adapterHoraire = HoraireAdapter(requireContext(), horaireList)
+        binding.lvProgrammation.adapter = adapterHoraire
+
         binding.btnAjouterProgrammation.setOnClickListener{
             val horaireFormFragment = HoraireAjouterFragment()
 

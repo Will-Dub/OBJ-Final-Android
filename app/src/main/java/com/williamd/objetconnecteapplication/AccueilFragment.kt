@@ -9,8 +9,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.LinearInterpolator
+import android.view.animation.RotateAnimation
+import android.widget.ImageView
 import android.widget.SeekBar
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.work.OneTimeWorkRequest
@@ -80,6 +83,22 @@ class AccueilFragment : Fragment() {
 
         binding.btnRefreshStatus.setOnClickListener{
             refreshStatus()
+
+            // Fait une animation
+            val rotate = RotateAnimation(
+                0f,
+                360f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f
+            )
+            rotate.duration = 250
+            rotate.interpolator = LinearInterpolator()
+
+            val image = binding.btnRefreshStatus as ImageView
+
+            image.startAnimation(rotate)
         }
 
         binding.seekBarVitesse.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
