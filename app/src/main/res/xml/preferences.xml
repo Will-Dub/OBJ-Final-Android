@@ -17,14 +17,16 @@
             android:title="Adresse ip"
             android:dialogTitle="Entrer l'adresse ip du serveur"
             android:inputType="text"
-            android:defaultValue="" />
+            android:defaultValue="10.4.129.18"
+            android:hint="Ex: 192.168.1.1" />
 
         <EditTextPreference
             android:key="pref_port_connection"
             android:title="Port"
             android:dialogTitle="Entrer le port du serveur"
             android:inputType="text"
-            android:defaultValue="8080" />
+            android:defaultValue="8080"
+            android:hint="Ex: 8080"/>
 
     </PreferenceCategory>
     <PreferenceCategory android:title="Notifications">

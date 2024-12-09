@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceManager
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
@@ -24,9 +25,12 @@ import com.williamd.objetconnecteapplication.databinding.FragmentAccueilBinding
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import java.io.BufferedReader
 import java.io.DataOutputStream
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
@@ -34,14 +38,17 @@ class AccueilFragment : Fragment() {
     private lateinit var binding: FragmentAccueilBinding
     val handler = Handler(Looper.getMainLooper())
     private lateinit var serverUrl: String
+    private var isUpdatingData = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // Accède au preferences
-        val sharedPreferences: SharedPreferences = requireContext().getSharedPreferences("ServerPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val ip = sharedPreferences.getString("pref_ip_connection", "10.4.129.18")
-        val port = sharedPreferences.getInt("pref_port_connection", 8080)
+        val port = sharedPreferences.getString("pref_port_connection", "8080")
+        val minuteIntervalString = sharedPreferences.getString("pref_fetch", "1")
+        val minuteInterval = minuteIntervalString?.toLong()
 
         // Crée l'url du serveur
         serverUrl = "http://$ip:$port"
@@ -50,6 +57,11 @@ class AccueilFragment : Fragment() {
         binding.seekBarVitesse.max = 100
 
         refreshStatus()
+
+        // Lance le refresh automatic
+        if (minuteInterval != null) {
+            startFetchingTask(minuteInterval)
+        }
 
         // Créer une requête pour exécuter la tâche une seule fois
         val myWorkRequest = OneTimeWorkRequest.Builder(MyWorker::class.java).build()
@@ -72,12 +84,14 @@ class AccueilFragment : Fragment() {
 
         binding.seekBarVitesse.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (isUpdatingData) return
+
                 // Appelé lors du changement dans le progress de la bar
                 val newVitesse = binding.seekBarVitesse.progress
 
                 // Crée un nouveau thread pour envoyer la vitesse
                 val thread = Thread {
-                    sendPost(serverUrl + "/vitesse", "{\"vitesse\": $newVitesse}")
+                    sendPost("$serverUrl/vitesse", "{\"vitesse\": $newVitesse}")
                 }
                 thread.start()
             }
@@ -92,28 +106,24 @@ class AccueilFragment : Fragment() {
         })
 
         binding.switchVentilation.setOnCheckedChangeListener{ buttonView, isChecked ->
+            if (isUpdatingData) return@setOnCheckedChangeListener
+
             // Crée un nouveau thread pour envoyer le status
             val thread = Thread {
-                sendPost(serverUrl + "/status", "{\"estAllume\": $isChecked}")
+                sendPost("$serverUrl/status", "{\"estAllume\": $isChecked}")
             }
             thread.start()
         }
 
         binding.switchTemperatureType.setOnCheckedChangeListener{ buttonView, isChecked ->
+            if (isUpdatingData) return@setOnCheckedChangeListener
+
             // Convertie le boolean en string
             val typeTemperature = if (isChecked) "C" else "F"
 
             // Crée un nouveau thread pour envoyer le status
             val thread = Thread {
-                sendPost(serverUrl + "/typedegree", "{\"type\": \"$typeTemperature\"}")
-            }
-            thread.start()
-        }
-
-        binding.btnModifierCouleur.setOnClickListener{
-            // Crée un nouveau thread pour executer la requête POST
-            val thread = Thread {
-                sendPost(serverUrl, "{\"heat\": 1}")
+                sendPost("$serverUrl/typedegree", "{\"type\": \"$typeTemperature\"}")
             }
             thread.start()
         }
@@ -138,49 +148,89 @@ class AccueilFragment : Fragment() {
         return binding.root
     }
 
+    fun startFetchingTask(intervalInMinutes: Long) {
+        val scheduler = Executors.newSingleThreadScheduledExecutor()
+
+        // Convertie les minutes en milliseconde
+        val intervalInMillis = intervalInMinutes * 60L * 1000L
+
+        // Schedule la task chaque intervalInMinutes minute
+        scheduler.scheduleAtFixedRate({
+            refreshStatus()
+        }, 0, intervalInMillis, TimeUnit.MILLISECONDS)
+    }
+
     private fun getData(stUrl: String): String?{
         val client = OkHttpClient()
-        val request = Request.Builder()
-            .url(stUrl)
-            .build()
-        return try{
+
+        try{
+            val request = Request.Builder()
+                .url(stUrl)
+                .build()
+
             client.newCall(request).execute().use{ response: Response ->
                 if(!response.isSuccessful){
                     Log.e("ERREUR", "Erreur de connection`${response.code}")
-                    null
                 }else{
                     val responseBody = response.body?.string()
                     Log.d("ResponseBody", "Received response: $responseBody")
-                    responseBody
+                    return responseBody
                 }
             }
         }
-        catch(e: Exception){
+        catch (e: Exception){
             e.printStackTrace()
             Log.e("ERREUR", e.toString())
-            null
         }
+        return null
     }
 
     private fun sendPost(stUrl: String, jsonMsg: String){
-        try{
-            // Établir la connexion à l'URL et envoyer notre commande json dans une requête post
+        var conn: HttpURLConnection? = null
+        var outputStream: DataOutputStream? = null
+        var inputStream: BufferedReader? = null
+        try {
+            // Établie la connection
             val url = URL(stUrl)
-            val conn = url.openConnection() as HttpURLConnection
+            conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8")
             conn.setRequestProperty("Accept", "application/json")
             conn.doInput = true
             conn.doOutput = true
-            DataOutputStream(conn.outputStream).use { os ->
-                os.writeBytes(jsonMsg)
-                os.flush()
-            }
 
-            conn.disconnect()
-        }catch(e: Exception){
+            // Envoie la requête
+            outputStream = DataOutputStream(conn.outputStream)
+            outputStream.writeBytes(jsonMsg)
+            outputStream.flush()
+
+            // Reçois la réponse
+            val responseCode = conn.responseCode
+            val responseMessage = conn.responseMessage
+            Log.d("Response", "Response Code: $responseCode")
+            Log.d("Response", "Response Message: $responseMessage")
+
+            // Lis la réponse
+            inputStream = BufferedReader(InputStreamReader(conn.inputStream))
+            val response = StringBuilder()
+            var line: String?
+            while (inputStream.readLine().also { line = it } != null) {
+                response.append(line)
+            }
+            Log.d("Response", "Response Body: $response")
+
+        } catch (e: Exception) {
             e.printStackTrace()
-            Log.e("ERREUR", e.message.toString())
+            Log.e("ERREUR", "Exception: ${e.message}")
+        } finally {
+            // Ferme les streams et la connection
+            try {
+                outputStream?.close()
+                inputStream?.close()
+                conn?.disconnect()
+            } catch (e: Exception) {
+                Log.e("ERREUR", "Failed to close resources: ${e.message}")
+            }
         }
     }
 
@@ -192,6 +242,7 @@ class AccueilFragment : Fragment() {
                     val status = Gson().fromJson(statusJson, Status::class.java)
 
                     handler.post {
+                        isUpdatingData = true
                         val formattedTemperature = getString(R.string.temperature, status.temperature)
                         binding.tvTemperature.text = formattedTemperature
 
@@ -209,6 +260,8 @@ class AccueilFragment : Fragment() {
                         else if (status.typeDegree == "F") {
                             binding.switchTemperatureType.isChecked = false
                         }
+
+                        isUpdatingData = false
                     }
                 } catch (e: JsonSyntaxException) {
                     Log.e("THREAD_ACCUEIL", "Error parsing JSON: ${e.message}")
