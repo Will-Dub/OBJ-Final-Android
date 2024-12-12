@@ -29,6 +29,7 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 class ListeLedFragment : Fragment() {
@@ -41,6 +42,7 @@ class ListeLedFragment : Fragment() {
     private val rgbLayoutDialogBinding : RgbLayoutDialogBinding by lazy {
         RgbLayoutDialogBinding.inflate(layoutInflater)
     }
+    private var scheduler: ScheduledExecutorService? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -185,15 +187,31 @@ class ListeLedFragment : Fragment() {
     }
 
     fun startFetchingTask(intervalInMinutes: Long) {
-        val scheduler = Executors.newSingleThreadScheduledExecutor()
+        scheduler = Executors.newSingleThreadScheduledExecutor()
 
         // Convertie les minutes en milliseconde
         val intervalInMillis = intervalInMinutes * 60L * 1000L
 
         // Schedule la task chaque intervalInMinutes minute
-        scheduler.scheduleAtFixedRate({
+        scheduler?.scheduleAtFixedRate({
             refreshCouleurs()
         }, 0, intervalInMillis, TimeUnit.MILLISECONDS)
+    }
+
+    private fun stopFetchingTask() {
+        scheduler?.apply {
+            // Arrête toutes les tâches en cours
+            shutdown()
+            try {
+                // Attends que les taches finissent 2 seconde
+                if (!awaitTermination(2, TimeUnit.SECONDS)) {
+                    shutdownNow() // Force la fin de la tâche
+                }
+            } catch (e: InterruptedException) {
+                shutdownNow()
+            }
+        }
+        scheduler = null
     }
 
     private fun refreshCouleurs(){
@@ -293,5 +311,11 @@ class ListeLedFragment : Fragment() {
                 Log.e("ERREUR", "Failed to close resources: ${e.message}")
             }
         }
+    }
+
+    override fun onDestroyView() {
+        // Arrête toutes les tâches
+        stopFetchingTask()
+        super.onDestroyView()
     }
 }

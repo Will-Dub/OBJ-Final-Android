@@ -34,6 +34,7 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 
@@ -42,6 +43,7 @@ class AccueilFragment : Fragment() {
     val handler = Handler(Looper.getMainLooper())
     private lateinit var serverUrl: String
     private var isUpdatingData = false
+    private var scheduler: ScheduledExecutorService? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -168,15 +170,31 @@ class AccueilFragment : Fragment() {
     }
 
     fun startFetchingTask(intervalInMinutes: Long) {
-        val scheduler = Executors.newSingleThreadScheduledExecutor()
+        scheduler = Executors.newSingleThreadScheduledExecutor()
 
         // Convertie les minutes en milliseconde
         val intervalInMillis = intervalInMinutes * 60L * 1000L
 
         // Schedule la task chaque intervalInMinutes minute
-        scheduler.scheduleAtFixedRate({
+        scheduler?.scheduleAtFixedRate({
             refreshStatus()
         }, 0, intervalInMillis, TimeUnit.MILLISECONDS)
+    }
+
+    private fun stopFetchingTask() {
+        scheduler?.apply {
+            // Arrête toutes les tâches en cours
+            shutdown()
+            try {
+                // Attends que les taches finissent 2 seconde
+                if (!awaitTermination(2, TimeUnit.SECONDS)) {
+                    shutdownNow() // Force la fin de la tâche
+                }
+            } catch (e: InterruptedException) {
+                shutdownNow()
+            }
+        }
+        scheduler = null
     }
 
     private fun getData(stUrl: String): String?{
@@ -290,6 +308,12 @@ class AccueilFragment : Fragment() {
             }
         }
         thread.start()
+    }
+
+    override fun onDestroyView() {
+        // Arrête toutes les tâches
+        stopFetchingTask()
+        super.onDestroyView()
     }
 
 }

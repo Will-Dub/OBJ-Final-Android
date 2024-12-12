@@ -11,6 +11,18 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 
 class HoraireAdapter(private val context: Context, private val dataList: MutableList<Horaire>): BaseAdapter() {
+    interface OnDeleteClickListener {
+        fun onDeleteClick(currentItem: Horaire)
+    }
+
+    // Variable qui stocke la référence
+    private var deleteClickListener: OnDeleteClickListener? = null
+
+    // Permet au fragment de changer le listener
+    fun setDeleteClickListener(listener: OnDeleteClickListener) {
+        this.deleteClickListener = listener
+    }
+
     override fun getCount(): Int {
         return dataList.size
     }
@@ -43,25 +55,9 @@ class HoraireAdapter(private val context: Context, private val dataList: Mutable
         //Events
         //Supprimer
         btnDelete.setOnClickListener {
-            showDeleteConfirmationDialog(position)
+            deleteClickListener?.onDeleteClick(currentItem)
         }
 
         return itemView
     }
-
-    private fun showDeleteConfirmationDialog(position: Int){
-        val builder = AlertDialog.Builder(context)
-        builder.setTitle(R.string.horaire_delete_title)
-        builder.setMessage(R.string.horaire_delete_message)
-        builder.setPositiveButton(R.string.yes) { _, _ ->
-            dataList.removeAt(position)
-            notifyDataSetChanged()
-        }
-        builder.setNegativeButton(R.string.no) { dialog, _ ->
-            dialog.dismiss()
-        }
-        builder.show()
-
-    }
-
 }
