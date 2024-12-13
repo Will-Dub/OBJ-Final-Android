@@ -25,7 +25,7 @@
             android:title="Port"
             android:dialogTitle="Entrer le port du serveur"
             android:inputType="text"
-            android:defaultValue="8080"
+            android:defaultValue="4443"
             android:hint="Ex: 8080"/>
 
     </PreferenceCategory>

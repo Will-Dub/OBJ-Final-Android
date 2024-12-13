@@ -15,15 +15,27 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.williamd.objetconnecteapplication.databinding.DialogHoraireAjouterBinding
 import com.williamd.objetconnecteapplication.databinding.FragmentHoraireBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import okhttp3.internal.concurrent.Task
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -183,13 +195,14 @@ class HoraireFragment : Fragment(), HoraireAdapter.OnDeleteClickListener {
      */
     private fun addHoraire(horaire: Horaire){
         // Charge la liste de la mémoire
-        horaireList = loadHoraireList()
+        val storedHoraireList = loadHoraireList()
 
         // Ajoute l'horaire
+        storedHoraireList.add(horaire)
         horaireList.add(horaire)
 
         // Sauvegarde la liste
-        saveHoraireList(horaireList)
+        saveHoraireList(storedHoraireList)
 
         // Crée la tache
         scheduler.scheduleTask(horaire)
@@ -204,13 +217,14 @@ class HoraireFragment : Fragment(), HoraireAdapter.OnDeleteClickListener {
      */
     private fun removeHoraire(horaire: Horaire) {
         // Charge la liste de la mémoire
-        horaireList = loadHoraireList()
+        val newHoraireList = loadHoraireList()
 
         // Enleve l'horaire
+        newHoraireList.removeIf { it.id == horaire.id }
         horaireList.removeIf { it.id == horaire.id }
 
         // Sauvegarde la liste
-        saveHoraireList(horaireList)
+        saveHoraireList(newHoraireList)
 
         // Annule la tache
         scheduler.cancelTask(horaire)
@@ -283,15 +297,25 @@ class TaskScheduler(private val context: Context) {
             "id" to horaire.id
         )
 
+        // Crée les contraintes
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
         // Crée la requête de work
         val workRequest = OneTimeWorkRequestBuilder<ScheduledWorker>()
             .setInputData(inputData)
             .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .addTag(horaire.id) // Id pour annuler
+            .setConstraints(constraints)
+            .addTag(horaire.id)
             .build()
 
         // Envoie la requête
-        workManager.enqueue(workRequest)
+        workManager.enqueueUniqueWork(
+            horaire.id,
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
     }
 
     fun cancelTask(horaire: Horaire) {
@@ -303,8 +327,8 @@ class TaskScheduler(private val context: Context) {
 class ScheduledWorker(
     context: Context,
     workerParams: WorkerParameters
-) : CoroutineWorker(context, workerParams) {
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+) : Worker(context, workerParams) {
+    override fun doWork(): Result {
         try {
             // Accède au donnée de work
             val type = inputData.getString("type")
@@ -317,7 +341,7 @@ class ScheduledWorker(
             val port = sharedPreferences.getString("pref_port_connection", "8080")
 
             // Crée l'url du serveur
-            val serverUrl = "http://$ip:$port"
+            val serverUrl = "https://$ip:$port"
 
             // Choisie le type(allumé ou éteindre)
             var estAllume = true
@@ -333,66 +357,55 @@ class ScheduledWorker(
                 removeHoraire(horaireId)
             }
 
-            return@withContext if (result) Result.success() else Result.failure()
+            return Result.success()
         } catch (e: Exception) {
             Log.e("ScheduledWorker", "Error executing work: ${e.message}", e)
-            return@withContext Result.failure()
+            return Result.failure()
         }
     }
 
-    private suspend fun sendPost(stUrl: String, jsonMsg: String): Boolean = withContext(Dispatchers.IO){
-        var conn: HttpURLConnection? = null
-        var outputStream: DataOutputStream? = null
-        var inputStream: BufferedReader? = null
-        try {
-            // Établie la connection
-            val url = URL(stUrl)
-            conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8")
-            conn.setRequestProperty("Accept", "application/json")
-            conn.doInput = true
-            conn.doOutput = true
+    private fun sendPost(stUrl: String, jsonMsg: String) {
+        val client: OkHttpClient = OkHttpClient.Builder()
+            .hostnameVerifier(HostnameVerifier())
+            .build()
 
-            // Envoie la requête
-            outputStream = DataOutputStream(conn.outputStream)
-            outputStream.writeBytes(jsonMsg)
-            outputStream.flush()
+        // Prépare la requête
+        val body = jsonMsg.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-            // Reçois la réponse
-            val responseCode = conn.responseCode
-            val responseMessage = conn.responseMessage
-            Log.d("ScheduledWorkerPost", "Response Code: $responseCode")
-            Log.d("ScheduledWorkerPost", "Response Message: $responseMessage")
+        // Crée la requête
+        val request = Request.Builder()
+            .url(stUrl)
+            .post(body)
+            .addHeader("Content-Type", "application/json;charset=UTF-8")
+            .addHeader("Accept", "application/json")
+            .build()
 
-            // Lis la réponse
-            inputStream = BufferedReader(InputStreamReader(conn.inputStream))
-            val response = StringBuilder()
-            var line: String?
-            while (inputStream.readLine().also { line = it } != null) {
-                response.append(line)
+        // Envoie la requête
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("ScheduledSendPost", "Request failed: ${e.message}")
             }
-            Log.d("ScheduledWorkerPost", "Response Body: $response")
 
-            return@withContext true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e("ScheduledWorkerPost", "Exception: ${e.message}")
-
-            return@withContext false
-        } finally {
-            // Ferme les streams et la connection
-            try {
-                outputStream?.close()
-                inputStream?.close()
-                conn?.disconnect()
-            } catch (e: Exception) {
-                Log.e("ScheduledWorkerPost", "Failed to close resources: ${e.message}")
+            override fun onResponse(call: Call, response: Response) {
+                // Recois la réponse
+                try {
+                    if (response.isSuccessful) {
+                        // Success
+                        val responseBody = response.body?.string() ?: ""
+                        Log.d("ScheduledSendPost", "Response Code: ${response.code}")
+                        Log.d("ScheduledSendPost", "Response Body: $responseBody")
+                    } else {
+                        // Erreur
+                        Log.e("ScheduledSendPost", "Failed with response code: ${response.code}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("ScheduledSendPost", "Exception: ${e.message}")
+                }
             }
-        }
+        })
     }
 
-    private suspend fun removeHoraire(horaireId: String) {
+    private fun removeHoraire(horaireId: String) {
         try {
             // Charge la liste
             val horaireList = loadHoraireList()

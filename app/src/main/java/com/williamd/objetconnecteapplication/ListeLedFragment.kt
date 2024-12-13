@@ -20,11 +20,16 @@ import com.google.gson.JsonParseException
 import com.google.gson.JsonSyntaxException
 import com.williamd.objetconnecteapplication.databinding.FragmentListeLedBinding
 import com.williamd.objetconnecteapplication.databinding.RgbLayoutDialogBinding
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.BufferedReader
 import java.io.DataOutputStream
+import java.io.IOException
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -58,12 +63,12 @@ class ListeLedFragment : Fragment() {
         // Accède au preferences
         val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val ip = sharedPreferences.getString("pref_ip_connection", "10.4.129.18")
-        val port = sharedPreferences.getString("pref_port_connection", "8080")
+        val port = sharedPreferences.getString("pref_port_connection", "4443")
         val minuteIntervalString = sharedPreferences.getString("pref_fetch", "1")
         val minuteInterval = minuteIntervalString?.toLong()
 
         // Crée l'url du serveur
-        serverUrl = "http://$ip:$port"
+        serverUrl = "https://$ip:$port"
 
         refreshCouleurs()
 
@@ -222,6 +227,10 @@ class ListeLedFragment : Fragment() {
                     val couleurs = Gson().fromJson(couleursJson, Couleur::class.java)
 
                     handler.post {
+                        if(couleurs == null){
+                            return@post
+                        }
+
                         // Change les couleurs
                         currentCouleurLedAllume = couleurs.allume
                         binding.viewConfigurationLedAllume.setBackgroundColor(Color.parseColor(couleurs.allume))
@@ -240,7 +249,9 @@ class ListeLedFragment : Fragment() {
     }
 
     private fun getData(stUrl: String): String?{
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .hostnameVerifier(HostnameVerifier())
+            .build()
 
         try{
             val request = Request.Builder()
@@ -264,53 +275,45 @@ class ListeLedFragment : Fragment() {
         return null
     }
 
-    private fun sendPost(stUrl: String, jsonMsg: String){
-        var conn: HttpURLConnection? = null
-        var outputStream: DataOutputStream? = null
-        var inputStream: BufferedReader? = null
-        try {
-            // Établie la connection
-            val url = URL(stUrl)
-            conn = url.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8")
-            conn.setRequestProperty("Accept", "application/json")
-            conn.doInput = true
-            conn.doOutput = true
+    private fun sendPost(stUrl: String, jsonMsg: String) {
+        val client: OkHttpClient = OkHttpClient.Builder()
+            .hostnameVerifier(HostnameVerifier())
+            .build()
 
-            // Envoie la requête
-            outputStream = DataOutputStream(conn.outputStream)
-            outputStream.writeBytes(jsonMsg)
-            outputStream.flush()
+        // Prépare la requête
+        val body = jsonMsg.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
-            // Reçois la réponse
-            val responseCode = conn.responseCode
-            val responseMessage = conn.responseMessage
-            Log.d("Response", "Response Code: $responseCode")
-            Log.d("Response", "Response Message: $responseMessage")
+        // Crée la requête
+        val request = Request.Builder()
+            .url(stUrl)
+            .post(body)
+            .addHeader("Content-Type", "application/json;charset=UTF-8")
+            .addHeader("Accept", "application/json")
+            .build()
 
-            // Lis la réponse
-            inputStream = BufferedReader(InputStreamReader(conn.inputStream))
-            val response = StringBuilder()
-            var line: String?
-            while (inputStream.readLine().also { line = it } != null) {
-                response.append(line)
+        // Envoie la requête
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("LedSendPost", "Request failed: ${e.message}")
             }
-            Log.d("Response", "Response Body: $response")
 
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e("ERREUR", "Exception: ${e.message}")
-        } finally {
-            // Ferme les streams et la connection
-            try {
-                outputStream?.close()
-                inputStream?.close()
-                conn?.disconnect()
-            } catch (e: Exception) {
-                Log.e("ERREUR", "Failed to close resources: ${e.message}")
+            override fun onResponse(call: Call, response: Response) {
+                // Recois la réponse
+                try {
+                    if (response.isSuccessful) {
+                        // Success
+                        val responseBody = response.body?.string() ?: ""
+                        Log.d("LedSendPost", "Response Code: ${response.code}")
+                        Log.d("LedSendPost", "Response Body: $responseBody")
+                    } else {
+                        // Erreur
+                        Log.e("LedSendPost", "Failed with response code: ${response.code}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("LedSendPost", "Exception: ${e.message}")
+                }
             }
-        }
+        })
     }
 
     override fun onDestroyView() {
