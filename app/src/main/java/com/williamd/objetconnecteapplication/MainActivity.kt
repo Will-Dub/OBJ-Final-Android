@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity(), BottomNavigationView.OnNavigationItemS
         WorkManager.getInstance(this)
             .enqueueUniquePeriodicWork(
                 "SensorMonitoringWork",
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
                 requete
             )
         // Lancer la commande au Worker pour qu'il l'exécute
@@ -120,6 +120,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters): Work
     private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
     companion object {
+        private const val TAG = "NotificationWorker"
         private const val PREF_LAST_TEMPERATURE = "last_temperature"
         private const val PREF_LAST_HUMIDITY = "last_humidity"
         private const val TEMPERATURE_THRESHOLD = 1.0f  // Threshold de temperature
@@ -127,6 +128,8 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters): Work
     }
 
     override fun doWork(): Result {
+        Log.d(TAG, "Début de l'exécution du worker")
+
         // Accède au préférences
         val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
         val ip = sharedPreferences.getString("pref_ip_connection", "10.4.129.18")
@@ -134,21 +137,42 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters): Work
         val alerteTemperature = sharedPreferences.getBoolean("pref_alerte_temperature", true)
         val alerteHumidite = sharedPreferences.getBoolean("pref_alerte_humidite", true)
 
+        Log.d(TAG, "Paramètres chargés - IP: $ip, Port: $port")
+        Log.d(TAG, "Alertes activées - Température: $alerteTemperature, Humidité: $alerteHumidite")
+
         if(!alerteHumidite && !alerteTemperature){
+            Log.i(TAG, "Aucune alerte n'est activée, arrêt du worker")
             return Result.success()
         }
 
         // Crée l'url du serveur
         val serverUrl = "https://$ip:$port"
+        Log.d(TAG, "URL du serveur: $serverUrl")
 
         // Fait la requête get pour accéder au status
-        val statusJson = getData("$serverUrl/status") ?: return Result.failure()
+        val statusJson = getData("$serverUrl/status")
+        if(statusJson == null){
+            Log.e(TAG, "Échec de la récupération des données du serveur")
+            return Result.failure()
+        }
+        Log.d(TAG, "Données reçues: $statusJson")
 
-        val status = Gson().fromJson(statusJson, Status::class.java) ?: return Result.failure()
+        val status = try {
+            Gson().fromJson(statusJson, Status::class.java)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erreur lors du parsing JSON", e)
+            return Result.failure()
+        }
 
+        Log.d(TAG, "Status parsé - Température: ${status.temperature}°C, Humidité: ${status.humidite}%")
+
+        // Vérifie si il y a des changements
         val (hasChanged, message) = hasDataChanged(status, alerteTemperature, alerteHumidite)
+        Log.d(TAG, "Analyse des changements - Changement détecté: $hasChanged, Message: $message")
 
+        // Affiche une notification si les données on changé
         if (hasChanged) {
+            Log.i(TAG, "Changement significatif détecté, création de la notification")
             creerChannel()
             val notificationId = 1
             afficherNotification(notificationId, "Alerte", message)
@@ -159,8 +183,10 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters): Work
                 putFloat(PREF_LAST_HUMIDITY, status.humidite)
                 apply()
             }
+            Log.d(TAG, "Nouvelles valeurs sauvegardées - Température: ${status.temperature}, Humidité: ${status.humidite}")
         }
 
+        Log.d(TAG, "Fin de l'exécution du worker avec succès")
         return Result.success()
     }
 
@@ -169,29 +195,56 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters): Work
         checkTemperature: Boolean,
         checkHumidity: Boolean
     ): Pair<Boolean, String> {
-        val lastTemperature = sharedPreferences.getFloat(PREF_LAST_TEMPERATURE, newStatus.temperature)
-        val lastHumidity = sharedPreferences.getFloat(PREF_LAST_HUMIDITY, newStatus.humidite)
+        val lastTemperature = sharedPreferences.getFloat(PREF_LAST_TEMPERATURE, Float.NaN)
+        val lastHumidity = sharedPreferences.getFloat(PREF_LAST_HUMIDITY, Float.NaN)
 
+        if (lastTemperature.isNaN() || lastHumidity.isNaN()) {
+            // Temperature pas définie
+            Log.d(TAG, "Temperature et humidite premier accès")
+
+            // Sauvegarde les valeurs
+            sharedPreferences.edit().apply {
+                putFloat(PREF_LAST_TEMPERATURE, newStatus.temperature)
+                putFloat(PREF_LAST_HUMIDITY, newStatus.humidite)
+                apply()
+            }
+
+            return Pair(false, "")
+        }
+
+        Log.d(TAG, "Dernières valeurs - Température: $lastTemperature°C, Humidité: $lastHumidity%")
+        Log.d(TAG, "Nouvelles valeurs - Température: ${newStatus.temperature}°C, Humidité: ${newStatus.humidite}%")
+
+        // Calcul la différence
         val temperatureChange = abs(newStatus.temperature - lastTemperature)
         val humidityChange = abs(newStatus.humidite - lastHumidity)
 
+        Log.d(TAG, "Changements calculés - Température: $temperatureChange°C, Humidité: $humidityChange%")
+
+        // Vérifie si la température et l'humidité ont dépassé la limite
         val temperatureChanged = checkTemperature && temperatureChange >= TEMPERATURE_THRESHOLD
         val humidityChanged = checkHumidity && humidityChange >= HUMIDITY_THRESHOLD
 
+        Log.d(TAG, "Seuils dépassés - Température: $temperatureChanged, Humidité: $humidityChanged")
+
         val messageBuilder = StringBuilder()
 
+        // Vérifie si la température à changer asser et crée le message
         if (temperatureChanged) {
             messageBuilder.append("La température à changé de ${String.format("%.1f", temperatureChange)}°C")
             if (humidityChanged) messageBuilder.append(" et ")
         }
 
+        // Vérifie si l'humidité à changer asser et crée le message
         if (humidityChanged) {
             messageBuilder.append("L'humidité à changé de ${String.format("%.1f", humidityChange)}%")
         }
 
         return if (temperatureChanged || humidityChanged) {
+            Log.i(TAG, "Changement significatif détecté: ${messageBuilder.toString()}")
             Pair(true, messageBuilder.toString())
         } else {
+            Log.d(TAG, "Aucun changement significatif détecté")
             Pair(false, "")
         }
     }

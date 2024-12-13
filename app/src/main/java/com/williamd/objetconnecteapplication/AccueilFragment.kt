@@ -45,9 +45,9 @@ import java.util.concurrent.TimeUnit
 
 
 class AccueilFragment : Fragment() {
-    private lateinit var binding: FragmentAccueilBinding
+    lateinit var binding: FragmentAccueilBinding
     val handler = Handler(Looper.getMainLooper())
-    private lateinit var serverUrl: String
+    lateinit var serverUrl: String
     private var isUpdatingData = false
     private var scheduler: ScheduledExecutorService? = null
 
@@ -213,7 +213,7 @@ class AccueilFragment : Fragment() {
         return null
     }
 
-    private fun sendPost(stUrl: String, jsonMsg: String) {
+    fun sendPost(stUrl: String, jsonMsg: String) {
         val client: OkHttpClient = OkHttpClient.Builder()
             .hostnameVerifier(HostnameVerifier())
             .build()

@@ -59,4 +59,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     implementation(libs.material)
+    testImplementation(libs.mockito.core.v461)
+    testImplementation(libs.mockito.inline)
+    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation(libs.androidx.core.testing)
 }
