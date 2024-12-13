@@ -338,7 +338,7 @@ class ScheduledWorker(
             // Accède au préférences
             val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             val ip = sharedPreferences.getString("pref_ip_connection", "10.4.129.18")
-            val port = sharedPreferences.getString("pref_port_connection", "8080")
+            val port = sharedPreferences.getString("pref_port_connection", "4443")
 
             // Crée l'url du serveur
             val serverUrl = "https://$ip:$port"
