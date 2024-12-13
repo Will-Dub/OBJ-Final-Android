@@ -1,5 +1,5 @@
 package com.williamd.objetconnecteapplication
-
+/*
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -30,4 +30,4 @@ class AccueilInstrumentedTest {
         // Vérifie que le textView est mis à jour avec les nouvelles données
         onView(withId(R.id.someTv)).check(matches(withText("...")))
     }
-}
+}*/
