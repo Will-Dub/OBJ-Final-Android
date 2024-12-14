@@ -39,6 +39,10 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
+    packagingOptions {
+        exclude("META-INF/LICENSE.md")
+        exclude("META-INF/LICENSE-notice.md")
+    }
 }
 
 dependencies {
@@ -63,8 +67,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     implementation(libs.material)
     androidTestImplementation(libs.mockwebserver)
-    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
-
+    implementation("io.mockk:mockk:1.13.5")
 
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
 
@@ -72,4 +75,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.squareup.okhttp3:logging-interceptor")
     implementation ("com.squareup.okhttp3:okhttp-tls")
+    testImplementation("org.mockito:mockito-core:4.6.1")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+    testImplementation("org.mockito:mockito-inline:4.6.1")
 }

@@ -5,13 +5,10 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="AccueilInstrumentedTest">
+      <SelectionState runConfigName="testFragmentReplacement()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="testRefreshButtonClick()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="testButtonClickTriggersRequestAndDisplaysResponse()">
+      <SelectionState runConfigName="testSeekBarProgressUpdate()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

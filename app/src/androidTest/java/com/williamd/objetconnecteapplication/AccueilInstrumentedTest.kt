@@ -2,20 +2,29 @@ package com.williamd.objetconnecteapplication
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.Image
+import android.util.Log
 import android.view.View
+import android.widget.ImageButton
 import android.widget.SeekBar
+import android.widget.Switch
 import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.fragment.app.testing.withFragment
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import kotlinx.coroutines.launch
 import okhttp3.ConnectionSpec
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -26,27 +35,16 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestRule
-import org.junit.runner.Description
 import org.junit.runner.RunWith
-import org.junit.runners.model.Statement
-import java.io.InputStream
-import java.security.KeyStore
-import java.security.SecureRandom
-import java.security.Security
-import java.security.cert.Certificate
-import java.security.cert.CertificateException
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.KeyManagerFactory
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.TrustManager
-import javax.net.ssl.TrustManagerFactory
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import javax.net.ssl.X509TrustManager
-
+import io.mockk.verify
+import io.mockk.spyk
+import android.os.Build
+import android.provider.Settings
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.matcher.ViewMatchers
+import org.hamcrest.Matcher
 
 @RunWith(AndroidJUnit4::class)
 class AccueilInstrumentedTest {
@@ -61,11 +59,13 @@ class AccueilInstrumentedTest {
         mockWebServerSSL = MockWebServerSSL()
         mockWebServerSSL.setupMockWebServerWithSSL(targetContext)
 
-        // Setup SharedPreferences with test values
+        // Arrange les préférence pour pointer au mockServer
         preferencesEditor = PreferenceManager.getDefaultSharedPreferences(targetContext).edit()
         preferencesEditor.putString("pref_ip_connection", "127.0.0.1")
         preferencesEditor.putString("pref_port_connection", mockWebServerSSL.getMockWebServer().port.toString())
         preferencesEditor.apply()
+
+        fragment = launchFragmentInContainer<AccueilFragment>()
     }
 
     @After
@@ -75,83 +75,101 @@ class AccueilInstrumentedTest {
 
     @Test
     fun testFragmentCreation() {
-        launchFragmentInContainer<AccueilFragment>()
-
-        // Verify basic UI elements are displayed
+        // Assert
         onView(withId(R.id.seekBar_vitesse)).check(matches(isDisplayed()))
         onView(withId(R.id.btn_refresh_status)).check(matches(isDisplayed()))
+        onView(withId(R.id.tv_temperature)).check(matches(isDisplayed()))
+        onView(withId(R.id.tv_humidite)).check(matches(isDisplayed()))
+        onView(withId(R.id.switch_ventilation)).check(matches(isDisplayed()))
+        onView(withId(R.id.switch_temperature_type)).check(matches(isDisplayed()))
     }
 
     @Test
-    fun testButtonClickTriggersRequestAndDisplaysResponse() {
-        fragment= launchFragmentInContainer<AccueilFragment>()
-
-        val client = mockWebServerSSL.getClientBuilder()
-            .build()
-
+    fun testSeekBarProgressUpdate() {
+        // Arrange
+        val client = mockWebServerSSL.getClientBuilder().build()
         fragment.onFragment { frag ->
             frag.setClient(client)
         }
 
-        // Enqueue a mock response from the server
-        val mockResponse = MockResponse()
-            .setResponseCode(200)
-            .setBody("Test response") // This is the response body that should be shown in the UI
-        mockWebServerSSL.getMockWebServer().enqueue(mockResponse)
-        mockWebServerSSL.getMockWebServer().enqueue(mockResponse)
-        mockWebServerSSL.getMockWebServer().enqueue(mockResponse)
+        // Setup le retour de la requête
+        mockWebServerSSL.getMockWebServer().enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("{\"success\": true}")
+        )
 
-        // Perform button click action on btn_refresh
-        onView(withId(R.id.btn_refresh_status)).perform(click())
+        // Act
+        onView(withId(R.id.seekBar_vitesse))
+            .perform(setProgress(100))
+            .check(matches(withSeekBarValue(100)))
 
-        // Verify the request was made to the server
+        // Assert qu'une requête à été envoyé avec la bonne vitesse et le bon chemin
         val request = mockWebServerSSL.getMockWebServer().takeRequest()
-        assertNotNull(request)
-        assertEquals("/fetch", request.path)  // Assuming the request path is "/fetch" (update accordingly)
-
-        // Verify that the response is shown in the UI (assuming it's displayed in a TextView with id `response_text`)
-        //onView(withId(R.id.response_text)).check(matches(withText("Test response")))
+        assertEquals("/vitesse", request.path)
+        assertEquals("{\"vitesse\": 100}", request.body.readUtf8())
     }
 
     @Test
-    fun testRefreshSendRequest(){
-        launchFragmentInContainer<AccueilFragment>()
+    fun testRefreshRequestAndDisplaysResponse() {
+        val context = getInstrumentation().targetContext
 
-        // Prepare mock response
-        mockWebServerSSL.getMockWebServer().enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("test response")
-        )
-        mockWebServerSSL.getMockWebServer().enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("test response")
-        )
-        mockWebServerSSL.getMockWebServer().enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("test response")
-        )
+        // Valeur attendu
+        val expectedTemperature = 22.5f
+        val expectedHumidite = 100f
+        val expectedVitesse = 23
+        val formattedTemperature = context.getString(R.string.temperature, expectedTemperature)
+        val formattedHumidite = context.getString(R.string.humidite, expectedHumidite)
+        val expectedEstAllume = true
 
-        // Click refresh button
-        onView(withId(R.id.btn_refresh_status)).perform(click())
+        // Setup le client okHttp
+        val client = mockWebServerSSL.getClientBuilder().build()
+        fragment.onFragment { frag ->
+            frag.setClient(client)
+        }
 
-        // Verify network request was made
-        val request = mockWebServerSSL.getMockWebServer().takeRequest(2, TimeUnit.SECONDS)
+        // Met la réponse en queue
+        val mockResponse = MockResponse()
+            .setResponseCode(200)
+            .setBody("{ \"temperature\": $expectedTemperature, \"humidite\": $expectedHumidite, \"estAllume\": $expectedEstAllume, \"vitesse\": $expectedVitesse, \"typeDegree\": \"C\" }")
+        mockWebServerSSL.getMockWebServer().enqueue(mockResponse)
+
+        // Act
+        onView(withId(R.id.btn_refresh_status)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_refresh_status)).check(matches(isEnabled()))
+
+        fragment.onFragment { frag ->
+            val myButton = frag.view?.findViewById<ImageButton>(R.id.btn_refresh_status)
+
+            assertNotNull(myButton)
+
+            myButton?.performClick()
+        }
+
+        // Assert
+        // Attant la requête pour 3 seconde max
+        val request = mockWebServerSSL.getMockWebServer().takeRequest(3, TimeUnit.SECONDS)
         assertNotNull(request)
-        assertTrue(request?.path?.startsWith("/") == true)
+        if (request != null) {
+            assertEquals("/status", request.path)
+        }
+
+        // Vérifie que les donneés changé son bonne
+        onView(withId(R.id.tv_temperature)).check(matches(withText(formattedTemperature)))
+        onView(withId(R.id.tv_humidite)).check(matches(withText(formattedHumidite)))
+        onView(withId(R.id.seekBar_vitesse)).check(matches(withSeekBarValue(expectedVitesse)))
+        onView(withId(R.id.switch_ventilation)).check(matches(withSwitchValue(expectedEstAllume)))
     }
 
     @Test
     fun testSeekBarMaxValue() {
         launchFragmentInContainer<AccueilFragment>()
 
-        // Verify seekBar max value is set to 100
+        // Assert
+        // Vérifie que le maximum est 100 à la seekbar
         onView(withId(R.id.seekBar_vitesse)).check(matches(withSeekBarMax(100)))
     }
 
-    // Custom matcher for SeekBar max value
     private fun withSeekBarMax(max: Int) = object : TypeSafeMatcher<View>() {
         override fun describeTo(description: org.hamcrest.Description) {
             description.appendText("SeekBar with max value: $max")
@@ -159,6 +177,44 @@ class AccueilInstrumentedTest {
 
         override fun matchesSafely(item: View): Boolean {
             return item is SeekBar && item.max == max
+        }
+    }
+
+    private fun withSeekBarValue(value: Int) = object : TypeSafeMatcher<View>() {
+        override fun describeTo(description: org.hamcrest.Description) {
+            description.appendText("SeekBar with value: $value")
+        }
+
+        override fun matchesSafely(item: View): Boolean {
+            return item is SeekBar && item.progress == value
+        }
+    }
+
+    private fun withSwitchValue(value: Boolean) = object : TypeSafeMatcher<View>() {
+        override fun describeTo(description: org.hamcrest.Description) {
+            description.appendText("Check with value: $value")
+        }
+
+        override fun matchesSafely(item: View): Boolean {
+            return item is Switch && item.isEnabled == value
+        }
+    }
+
+    private fun setProgress(progress: Int): ViewAction {
+        return object : ViewAction {
+            override fun getConstraints(): Matcher<View> {
+                return ViewMatchers.isAssignableFrom(SeekBar::class.java)
+            }
+
+            override fun getDescription(): String {
+                return "Set progress to $progress"
+            }
+
+            override fun perform(uiController: UiController, view: View) {
+                val seekBar = view as SeekBar
+                seekBar.progress = progress
+                uiController.loopMainThreadUntilIdle()
+            }
         }
     }
 }

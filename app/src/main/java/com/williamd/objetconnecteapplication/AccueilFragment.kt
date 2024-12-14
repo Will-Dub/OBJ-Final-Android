@@ -56,7 +56,7 @@ class AccueilFragment : Fragment() {
     val handler = Handler(Looper.getMainLooper())
     lateinit var serverUrl: String
     private var isUpdatingData = false
-    private var scheduler: ScheduledExecutorService? = null
+    var scheduler: ScheduledExecutorService? = null
     private var client: OkHttpClient = OkHttpClient.Builder()
         .hostnameVerifier(HostnameVerifier())
         .build()
@@ -64,22 +64,24 @@ class AccueilFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Accède au preferences
-        val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        val ip = sharedPreferences.getString("pref_ip_connection", "10.4.129.18")
-        val port = sharedPreferences.getString("pref_port_connection", "4443")
-        val minuteIntervalString = sharedPreferences.getString("pref_fetch", "1")
-        val minuteInterval = minuteIntervalString?.toLong()
+        val context = context
+        if (context != null) {
+            val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+            val ip = sharedPreferences.getString("pref_ip_connection", "10.4.129.18")
+            val port = sharedPreferences.getString("pref_port_connection", "4443")
+            val minuteIntervalString = sharedPreferences.getString("pref_fetch", "1")
+            val minuteInterval = minuteIntervalString?.toLong()
 
-        // Crée l'url du serveur
-        serverUrl = "https://$ip:$port"
+            // Crée l'url du serveur
+            serverUrl = "https://$ip:$port"
 
-        // Définie le maximum de la bar de vitesse
-        binding.seekBarVitesse.max = 100
+            // Définie le maximum de la bar de vitesse
+            binding.seekBarVitesse.max = 100
 
-        // Lance le refresh automatique
-        if (minuteInterval != null) {
-            startFetchingTask(minuteInterval)
+            // Lance le refresh automatique
+            if (minuteInterval != null) {
+                startFetchingTask(minuteInterval)
+            }
         }
 
         binding.btnRefreshStatus.setOnClickListener{
@@ -184,7 +186,7 @@ class AccueilFragment : Fragment() {
         }, 0, intervalInMillis, TimeUnit.MILLISECONDS)
     }
 
-    private fun stopFetchingTask() {
+    fun stopFetchingTask() {
         scheduler?.apply {
             // Arrête toutes les tâches en cours
             shutdown()
@@ -200,7 +202,7 @@ class AccueilFragment : Fragment() {
         scheduler = null
     }
 
-    private fun getData(stUrl: String): String?{
+    fun getData(stUrl: String): String?{
         try{
             val request = Request.Builder()
                 .url(stUrl)
@@ -260,7 +262,7 @@ class AccueilFragment : Fragment() {
         })
     }
 
-    private fun refreshStatus(){
+    fun refreshStatus(){
         val thread = Thread {
             val statusJson = getData("$serverUrl/status")
             if(statusJson != null){
