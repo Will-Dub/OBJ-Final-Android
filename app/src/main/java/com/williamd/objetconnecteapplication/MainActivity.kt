@@ -39,8 +39,6 @@ import okhttp3.Response
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
-val CHANNEL_ID = "Channel1"
-
 class MainActivity : AppCompatActivity(), BottomNavigationView.OnNavigationItemSelectedListener {
     private lateinit var bottomNavigationView: BottomNavigationView
 
@@ -174,7 +172,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters): Work
         if (hasChanged) {
             Log.i(TAG, "Changement significatif détecté, création de la notification")
             creerChannel()
-            val notificationId = 1
+            val notificationId = System.currentTimeMillis().toInt()
             afficherNotification(notificationId, "Alerte", message)
 
             // Sauvegarde les nouvelles valeurs
@@ -261,17 +259,17 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters): Work
 
             client.newCall(request).execute().use{ response: Response ->
                 if(!response.isSuccessful){
-                    Log.e("ERREUR", "Erreur de connection`${response.code}")
+                    Log.e("NotificationWorker", "Erreur de connection`${response.code}")
                 }else{
                     val responseBody = response.body?.string()
-                    Log.d("ResponseBody", "Received response: $responseBody")
+                    Log.d("NotificationWorker", "Received response: $responseBody")
                     return responseBody
                 }
             }
         }
         catch (e: Exception){
             e.printStackTrace()
-            Log.e("ERREUR", e.toString())
+            Log.e("NotificationWorker", e.toString())
         }
         return null
     }
@@ -283,23 +281,32 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters): Work
      * @param texte Texte de la notification
      */
     private fun afficherNotification(id:Int, titre: String, texte: String){
-        // Prépare la notification, choisie ce qui y sera affiché et son niveau de priorité
-        val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.star_on)
-            .setContentText(titre)
-            .setContentText(texte)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        try{
+            // Prépare la notification, choisie ce qui y sera affiché et son niveau de priorité
+            val builder = NotificationCompat.Builder(applicationContext, channelId)
+                .setSmallIcon(android.R.drawable.star_on)
+                .setContentTitle(titre)
+                .setContentText(texte)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-        // Affiche la notification
-        with(NotificationManagerCompat.from(applicationContext)) {
-            // Vérification de la permission à ce moment
-            if(ActivityCompat.checkSelfPermission(
-                    applicationContext,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED){
-                notify(id, builder.build())
+            // Affiche la notification
+            with(NotificationManagerCompat.from(applicationContext)) {
+                // Vérification de la permission à ce moment
+                if(ActivityCompat.checkSelfPermission(
+                        applicationContext,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED){
+                    notify(id, builder.build())
+                    Log.i("NotificationWorker", "Notification envoyé")
+                }else{
+                    Log.e("NotificationWorker", "Permission pas autorisé")
+                }
             }
+        }catch (e: Exception){
+            e.printStackTrace()
+            Log.e("NotificationWorker", e.toString())
         }
+
     }
 
     /**

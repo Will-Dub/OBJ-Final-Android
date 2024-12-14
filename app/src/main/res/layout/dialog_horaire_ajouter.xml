@@ -27,6 +27,16 @@
         app:layout_constraintStart_toStartOf="@+id/tv_heure_horaire"
         app:layout_constraintTop_toBottomOf="@+id/tv_heure_horaire" />
 
+    <TextView
+        android:id="@+id/tv_quotidiennement_horaire"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="Quotidiennement:"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="@+id/tv_type_horaire"
+        app:layout_constraintTop_toBottomOf="@+id/tv_type_horaire" />
+
     <Button
         android:id="@+id/btn_sauvegarder_horaire"
         android:layout_width="wrap_content"
@@ -39,11 +49,11 @@
         android:id="@+id/btn_cancel_horaire"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="30dp"
         android:layout_marginEnd="5dp"
         android:text="Annuler"
         app:layout_constraintEnd_toStartOf="@+id/btn_sauvegarder_horaire"
-        app:layout_constraintTop_toBottomOf="@+id/tv_type_horaire" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_quotidiennement_horaire" />
 
     <TimePicker
         android:id="@+id/time_picker_horaire"
@@ -63,5 +73,14 @@
         app:layout_constraintEnd_toEndOf="@+id/time_picker_horaire"
         app:layout_constraintStart_toStartOf="@+id/time_picker_horaire"
         app:layout_constraintTop_toTopOf="@+id/tv_type_horaire" />
+
+    <CheckBox
+        android:id="@+id/check_quotidiennement"
+        android:layout_width="47dp"
+        android:layout_height="42dp"
+        android:layout_marginStart="10dp"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_quotidiennement_horaire"
+        app:layout_constraintStart_toEndOf="@+id/tv_quotidiennement_horaire"
+        app:layout_constraintTop_toTopOf="@+id/tv_quotidiennement_horaire" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

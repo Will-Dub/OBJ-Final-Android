@@ -1,12 +1,14 @@
 package com.williamd.objetconnecteapplication
 
 import android.content.Context
+import android.media.Image
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 
@@ -43,14 +45,24 @@ class HoraireAdapter(private val context: Context, private val dataList: Mutable
         val tvTitre = itemView.findViewById<TextView>(R.id.tv_adapter_horaire_titre)
         val tvType = itemView.findViewById<TextView>(R.id.tv_adapter_horaire_type)
         val btnDelete = itemView.findViewById<Button>(R.id.btn_adapter_horaire_supprimer)
+        val imgQuotidiennement = itemView.findViewById<ImageView>(R.id.img_quotidiennement)
 
+        // Affiche le type de changement
         if(currentItem.type == HoraireTypeEnum.ALLUME){
             tvType.text = "Allumé"
         }else if(currentItem.type == HoraireTypeEnum.ETEINT){
             tvType.text = "Éteindre"
         }
 
+        // Affiche l'heure
         tvTitre.text = currentItem.debut
+
+        // Affiche quotidiennement ou non
+        if(currentItem.isQuotidiennement){
+            imgQuotidiennement.visibility = View.VISIBLE
+        }else{
+            imgQuotidiennement.visibility = View.GONE
+        }
 
         //Events
         //Supprimer

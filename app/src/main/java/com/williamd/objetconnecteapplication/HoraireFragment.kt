@@ -17,10 +17,12 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -170,8 +172,11 @@ class HoraireFragment : Fragment(), HoraireAdapter.OnDeleteClickListener {
             // Combine heure et minute
             val temps = "$heure:$formattedMinute"
 
+            // Est quotidien
+            val isQuotidiennement = dialogBinding.checkQuotidiennement.isChecked
+
             // Crée une nouvelle horaire et refresh l'adapter
-            val newHoraire = Horaire(temps, typeAction)
+            val newHoraire = Horaire(temps, typeAction, isQuotidiennement)
 
             // Ajoute l'horaire à la liste
             addHoraire(newHoraire)
@@ -294,7 +299,8 @@ class TaskScheduler(private val context: Context) {
         val inputData = workDataOf(
             "type" to horaire.type.toString(),
             "debut" to horaire.debut,
-            "id" to horaire.id
+            "id" to horaire.id,
+            "isQuotidiennement" to horaire.isQuotidiennement
         )
 
         // Crée les contraintes
@@ -302,20 +308,37 @@ class TaskScheduler(private val context: Context) {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        // Crée la requête de work
-        val workRequest = OneTimeWorkRequestBuilder<ScheduledWorker>()
-            .setInputData(inputData)
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .setConstraints(constraints)
-            .addTag(horaire.id)
-            .build()
+        if (horaire.isQuotidiennement) {
+            // Fait que la tâche se répète chaque 24 heure
+            val workRequest = PeriodicWorkRequestBuilder<ScheduledWorker>(1, TimeUnit.DAYS)
+                .setInputData(inputData)
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .setConstraints(constraints)
+                .addTag(horaire.id)
+                .build()
 
-        // Envoie la requête
-        workManager.enqueueUniqueWork(
-            horaire.id,
-            ExistingWorkPolicy.REPLACE,
-            workRequest
-        )
+            // Envoie la requête
+            workManager.enqueueUniquePeriodicWork(
+                horaire.id,
+                ExistingPeriodicWorkPolicy.REPLACE,
+                workRequest
+            )
+        }else{
+            // Fait que la tâche est seulement exécuter 1 fois
+            val workRequest = OneTimeWorkRequestBuilder<ScheduledWorker>()
+                .setInputData(inputData)
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .setConstraints(constraints)
+                .addTag(horaire.id)
+                .build()
+
+            // Envoie la requête
+            workManager.enqueueUniqueWork(
+                horaire.id,
+                ExistingWorkPolicy.REPLACE,
+                workRequest
+            )
+        }
     }
 
     fun cancelTask(horaire: Horaire) {
@@ -334,6 +357,7 @@ class ScheduledWorker(
             val type = inputData.getString("type")
             val debut = inputData.getString("debut")
             val horaireId = inputData.getString("id")
+            val isQuotidiennement = inputData.getBoolean("isQuotidiennement", false)
 
             // Accède au préférences
             val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
@@ -352,8 +376,8 @@ class ScheduledWorker(
             // Envoie la requête
             val result = sendPost("$serverUrl/status", "{\"estAllume\": $estAllume}")
 
-            // Enleve l'horaire de la liste
-            if(horaireId != null){
+            // Enleve l'horaire de la liste si elle n'est pas quotidienne
+            if(horaireId != null && !isQuotidiennement){
                 removeHoraire(horaireId)
             }
 

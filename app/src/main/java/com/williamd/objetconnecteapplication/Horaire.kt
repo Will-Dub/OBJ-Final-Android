@@ -3,7 +3,7 @@ package com.williamd.objetconnecteapplication
 import java.io.Serializable
 import java.util.UUID
 
-class Horaire(val debut:String, val type: HoraireTypeEnum, val id: String = UUID.randomUUID().toString()): Serializable {
+class Horaire(val debut:String, val type: HoraireTypeEnum, val isQuotidiennement: Boolean, val id: String = UUID.randomUUID().toString()): Serializable {
 }
 
 
