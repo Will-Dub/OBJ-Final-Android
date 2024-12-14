@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginTop="10dp"
-        android:text="Heure:"
+        android:text="@string/heure_"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="@+id/time_picker_horaire"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:text="Type:"
+        android:text="@string/type_"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="@+id/tv_heure_horaire"
         app:layout_constraintTop_toBottomOf="@+id/tv_heure_horaire" />
@@ -32,7 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
-        android:text="Quotidiennement:"
+        android:text="@string/quotidiennement_"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="@+id/tv_type_horaire"
         app:layout_constraintTop_toBottomOf="@+id/tv_type_horaire" />
@@ -41,7 +41,7 @@
         android:id="@+id/btn_sauvegarder_horaire"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Sauvegarder"
+        android:text="@string/sauvegarder"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/btn_cancel_horaire" />
 
@@ -51,7 +51,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
         android:layout_marginEnd="5dp"
-        android:text="Annuler"
+        android:text="@string/annuler"
         app:layout_constraintEnd_toStartOf="@+id/btn_sauvegarder_horaire"
         app:layout_constraintTop_toBottomOf="@+id/tv_quotidiennement_horaire" />
 

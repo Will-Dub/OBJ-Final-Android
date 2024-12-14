@@ -19,6 +19,23 @@
     <string name="err_horaire_add_type">Veuillez sélectionner un type.</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
+    <string name="annuler">Annuler</string>
+    <string name="sauvegarder">Sauvegarder</string>
+    <string name="quotidiennement_">Quotidiennement:</string>
+    <string name="type_">Type:</string>
+    <string name="heure_">Heure:</string>
+    <string name="temperature_titre">Température</string>
+    <string name="humidite_titre">Humidité</string>
+    <string name="horaire">Horaire</string>
+    <string name="programmations">Programmations</string>
+    <string name="ajouter">Ajouter</string>
+    <string name="configuration_led">Configuration LED</string>
+    <string name="regles_de_couleur">Règles de couleur</string>
+    <string name="eteint">Éteint</string>
+    <string name="modifier">Modifier</string>
+    <string name="actif">Actif</string>
+    <string name="supprimer">Supprimer</string>
+    <string name="choisir">Choisir</string>
 
     <string-array name="pref_fetch_values">
         <item>1 minutes</item>

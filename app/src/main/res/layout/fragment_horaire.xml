@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
         android:layout_marginTop="5dp"
-        android:text="Horaire"
+        android:text="@string/horaire"
         android:textSize="34sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -33,7 +33,7 @@
             android:id="@+id/tv_programmation_titre"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Programmations"
+            android:text="@string/programmations"
             android:textSize="24sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
@@ -56,7 +56,7 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
-        android:text="Ajouter"
+        android:text="@string/ajouter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

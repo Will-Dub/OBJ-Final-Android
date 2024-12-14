@@ -21,7 +21,7 @@
         android:layout_width="77dp"
         android:layout_height="17dp"
         android:layout_marginTop="10dp"
-        android:hint="Actif"
+        android:hint="@string/actif"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="@+id/tv_adapter_horaire_titre"
         app:layout_constraintTop_toBottomOf="@+id/tv_adapter_horaire_titre" />
@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:backgroundTint="#C31E1E"
-        android:text="Supprimer"
+        android:text="@string/supprimer"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_adapter_horaire_titre" />

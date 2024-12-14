@@ -47,10 +47,10 @@ class AccueilUnitTest {
 
     @Before
     fun setup() {
-        // Initialize Mockito annotations (if not using a custom rule like `MockitoJUnit.rule()`)
+        // Initialise mockito
         MockitoAnnotations.initMocks(this)
 
-        // Initialize the fragment and mock objects
+        // Initialise le fragment
         fragment = AccueilFragment()
 
         // Mock SharedPreferences
@@ -59,56 +59,36 @@ class AccueilUnitTest {
         `when`(mockSharedPreferences.getString(eq("pref_port_connection"), anyString())).thenReturn("4443")
         `when`(mockSharedPreferences.getString(eq("pref_fetch"), anyString())).thenReturn("1")
 
-        // Mock Fragment Binding
+        // Mock les bindings
         val mockBinding = mock(FragmentAccueilBinding::class.java)
 
-        // Mock UI components
+        // Mock les composants du UI
         `when`(mockBinding.seekBarVitesse).thenReturn(mockSeekBar)
         `when`(mockBinding.btnRefreshStatus).thenReturn(mockButtonRefresh)
         `when`(mockBinding.switchVentilation).thenReturn(mockSwitchVentilation)
         `when`(mockBinding.switchTemperatureType).thenReturn(mockSwitchTemperatureType)
 
-        // Initialize the fragment and the mock context
+        // Initialise le fragment
         fragment.onAttach(InstrumentationRegistry.getInstrumentation().targetContext)
         fragment.onCreateView(LayoutInflater.from(ApplicationProvider.getApplicationContext()), null, null)
     }
 
     @Test
     fun testOnViewCreated() {
-        // Simulate onViewCreated
         fragment.onViewCreated(mock(View::class.java), null)
 
-        // Check that SharedPreferences values are being used to set up server URL
+        // Vérifie l'url crée
         assert(fragment.serverUrl == "https://10.4.129.18:4443")
 
-        // Verify SeekBar max value
+        // Vérifie le maximum de vitesse
         verify(mockBinding.seekBarVitesse).setMax(100)
 
-        // Verify that the refresh button animation is set up
+        // Vérifie si l'animation du bouton refresh fonctionne
         val rotateCaptor = argumentCaptor<RotateAnimation>()
         verify(mockButtonRefresh).startAnimation(rotateCaptor.capture())
         assert(rotateCaptor.firstValue.duration == 250L)
 
-        // Test the "Start Fetching Task" behavior based on SharedPreferences
+        // Vérifie si le fragment comment à fetch
         verify(mockHandler).post(any())
-    }
-
-    @Test
-    fun `test getData successfully parses response`() {
-        // Prepare a mock response
-        val mockJson = """{"temperature": 25.5, "humidite": 60.0, "estAllume": true, "vitesse": 75, "typeDegree": "C"}"""
-        /**
-        `when`(mockResponseBody.string()).thenReturn(mockJson)
-        `when`(mockCall.execute()).thenReturn(mockResponse)
-
-        fragment.setClient(mockClient)
-
-        // Execute the test method
-        val result = fragment.getData("https://test.com/status")
-
-        // Verify and assert the result
-        assertNotNull(result)
-        assertEquals(mockJson, result)
-        verify(mockClient).newCall(any())  // Verify that the mock client was called**/
     }
 }
