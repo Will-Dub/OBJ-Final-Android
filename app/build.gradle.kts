@@ -36,14 +36,16 @@ android {
     buildFeatures{
         viewBinding = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
-    // Dépendance workmanager
+// Dépendance workmanager
     implementation(libs.androidx.work.runtime.ktx)
 
     // Okhttp
-    implementation(libs.okhttp)
 
     // Serialize
     implementation("com.google.code.gson:gson:2.10.1")
@@ -56,11 +58,18 @@ dependencies {
     implementation(libs.androidx.preference.ktx)
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.fragment.testing)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     implementation(libs.material)
-    testImplementation(libs.mockito.core.v461)
-    testImplementation(libs.mockito.inline)
-    testImplementation("io.mockk:mockk:1.13.5")
-    testImplementation(libs.androidx.core.testing)
+    androidTestImplementation(libs.mockwebserver)
+    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
+
+
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+
+    // define any required OkHttp artifacts without version
+    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:logging-interceptor")
+    implementation ("com.squareup.okhttp3:okhttp-tls")
 }

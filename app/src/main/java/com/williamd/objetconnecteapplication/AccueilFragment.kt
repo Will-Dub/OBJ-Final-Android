@@ -16,6 +16,7 @@ import android.widget.ImageView
 import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
@@ -36,12 +37,18 @@ import okhttp3.Response
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.KeyStore
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.KeyManagerFactory
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 
 class AccueilFragment : Fragment() {
@@ -50,6 +57,9 @@ class AccueilFragment : Fragment() {
     lateinit var serverUrl: String
     private var isUpdatingData = false
     private var scheduler: ScheduledExecutorService? = null
+    private var client: OkHttpClient = OkHttpClient.Builder()
+        .hostnameVerifier(HostnameVerifier())
+        .build()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -158,6 +168,10 @@ class AccueilFragment : Fragment() {
         return binding.root
     }
 
+    fun setClient(testClient: OkHttpClient) {
+        client = testClient
+    }
+
     fun startFetchingTask(intervalInMinutes: Long) {
         scheduler = Executors.newSingleThreadScheduledExecutor()
 
@@ -187,10 +201,6 @@ class AccueilFragment : Fragment() {
     }
 
     private fun getData(stUrl: String): String?{
-        val client: OkHttpClient = OkHttpClient.Builder()
-            .hostnameVerifier(HostnameVerifier())
-            .build()
-
         try{
             val request = Request.Builder()
                 .url(stUrl)
@@ -214,10 +224,6 @@ class AccueilFragment : Fragment() {
     }
 
     fun sendPost(stUrl: String, jsonMsg: String) {
-        val client: OkHttpClient = OkHttpClient.Builder()
-            .hostnameVerifier(HostnameVerifier())
-            .build()
-
         // Prépare la requête
         val body = jsonMsg.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 

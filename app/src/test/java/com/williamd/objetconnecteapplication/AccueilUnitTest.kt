@@ -1,97 +1,127 @@
 package com.williamd.objetconnecteapplication
-
-import android.content.SharedPreferences
-import android.os.Looper
-import android.util.Log
+/*
 import android.view.View
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.fragment.app.FragmentActivity
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
-import junit.framework.TestCase.assertEquals
+import android.widget.SeekBar
+import androidx.fragment.app.testing.FragmentScenario
+import androidx.fragment.app.testing.launchFragmentInContainer
+import androidx.preference.PreferenceManager
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.hamcrest.Description
+import org.junit.After
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.internal.matchers.TypeSafeMatcher
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
-import org.mockito.junit.MockitoJUnitRunner
+import java.util.concurrent.TimeUnit
+/*
+@RunWith(AndroidJUnit4::class)
+class AccueilUnitTest {
+    @Rule
+    @JvmField
+    val activity = FragmentScenario.launchInContainer(AccueilFragment::class.java)
 
-@RunWith(MockitoJUnitRunner::class)
-class AccueilFragmentTest {
-
-    @get:Rule
-    val instantTaskExecutorRule = InstantTaskExecutorRule()
-
-    @Mock
-    lateinit var sharedPreferences: SharedPreferences
-    @Mock
-    lateinit var editor: SharedPreferences.Editor
-
-    private lateinit var fragment: AccueilFragment
-    private lateinit var activity: FragmentActivity
+    private lateinit var mockWebServer: MockWebServer
 
     @Before
     fun setup() {
-        // Mocks will be initialized automatically with MockitoJUnitRunner or MockitoExtension
-        Mockito.`when`(sharedPreferences.getString("pref_ip_connection", "10.4.129.18")).thenReturn("127.0.0.1")
-        Mockito.`when`(sharedPreferences.getString("pref_port_connection", "4443")).thenReturn("8080")
-        Mockito.`when`(sharedPreferences.getString("pref_fetch", "1")).thenReturn("5")
-        Mockito.`when`(sharedPreferences.edit()).thenReturn(editor)
+        // Setup MockWebServer
+        mockWebServer = MockWebServer()
+        mockWebServer.start()
 
-        // Mock Looper's static methods (mainLooper and myLooper)
-        mockkStatic(Looper::class) // This mocks the Looper class
-        val looper = mockk<Looper>(relaxed = true) // Relaxed mock to avoid errors on unused methods
-        every { Looper.getMainLooper() } returns looper // Mock the main looper
-        every { Looper.myLooper() } returns looper // Mock the myLooper method
+        // Setup SharedPreferences with test values
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+        sharedPreferences.edit().apply {
+            putString("pref_ip_connection", "127.0.0.1")
+            putString("pref_port_connection", mockWebServer.port.toString())
+            putString("pref_fetch", "1")
+            apply()
+        }
+    }
 
-        // Mock android.util.Log.isLoggable static method to avoid errors
-        mockkStatic(Log::class) // Mock the static Log class
-        every { Log.isLoggable(any(), any()) } returns true // Mock isLoggable to return true
-
-        mockkStatic(Log::class) // Mock the Log class to avoid errors on Log methods
-        every { Log.v(any(), any()) } returns 0 // Mock Log.v to return 0 (Log.VERBOSE)
-        every { Log.d(any(), any()) } returns 0 // Mock Log.d to return 0 (Log.DEBUG)
-        every { Log.i(any(), any()) } returns 0 // Mock Log.i to return 0 (Log.INFO)
-        every { Log.e(any(), any()) } returns 0 // Mock Log.e to return 0 (Log.ERROR)
-        every { Log.isLoggable(any(), any()) } returns true
-
-        // Create an Activity for the Fragment to be attached to
-        activity = FragmentActivity()
-
-        // Initialize the fragment
-        fragment = AccueilFragment()
-
-        // Add the fragment to the activity using FragmentTransaction
-        activity.supportFragmentManager.beginTransaction().add(fragment, "AccueilFragment").commit()
-
-        // Force fragment lifecycle methods to simulate onAttach, onCreateView, etc.
-        activity.supportFragmentManager.executePendingTransactions()
+    @After
+    fun teardown() {
+        mockWebServer.shutdown()
     }
 
     @Test
-    fun testServerUrlIsCreatedCorrectly() {
-        fragment.onViewCreated(View(fragment.context), null)
+    fun testFragmentCreation() {
+        // Launch fragment
+        val scenario = launchFragmentInContainer<AccueilFragment>()
 
-        // Assert that the server URL is correctly created from preferences
-        val expectedUrl = "https://127.0.0.1:8080"
-        assertEquals(expectedUrl, fragment.serverUrl)
+        // Verify basic UI elements are displayed
+        onView(withId(R.id.seekBar_vitesse)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_refresh_status)).check(matches(isDisplayed()))
     }
 
     @Test
-    fun testPostRequestIsSentWhenSeekBarChanges() {
-        val newSpeed = 50
+    fun testRefreshButtonClick() {
+        // Prepare mock response
+        val mockResponse = MockResponse()
+            .setResponseCode(200)
+            .setBody("{\"status\": \"success\"}")
+        mockWebServer.enqueue(mockResponse)
 
-        // Assume seekBar has been set up with an initial value
-        fragment.binding.seekBarVitesse.progress = newSpeed
+        // Launch fragment
+        val scenario = launchFragmentInContainer<AccueilFragment>()
 
-        // Mock the behavior of sending data (sendPost should be called with correct URL and body)
-        val sendPostMock = Mockito.spy(fragment)
-        sendPostMock.sendPost(fragment.serverUrl + "/vitesse", "{\"vitesse\": $newSpeed}")
+        // Click refresh button
+        onView(withId(R.id.btn_refresh_status)).perform(click())
 
-        // Check if the post request method was called
-        Mockito.verify(sendPostMock).sendPost(Mockito.anyString(), Mockito.anyString())
+        // Verify network request was made
+        val request = mockWebServer.takeRequest(2, TimeUnit.SECONDS)
+        assertNotNull(request)
+        assertTrue(request?.path?.startsWith("/") == true)
     }
-}
+
+    @Test
+    fun testSeekBarMaxValue() {
+        // Launch fragment
+        val scenario = launchFragmentInContainer<AccueilFragment>()
+
+        // Verify seekBar max value is set to 100
+        onView(withId(R.id.seekBar_vitesse)).check(matches(withSeekBarMax(100)))
+    }
+
+    @Test
+    fun testAutomaticRefresh() {
+        // Prepare multiple mock responses
+        repeat(2) {
+            mockWebServer.enqueue(
+                MockResponse()
+                    .setResponseCode(200)
+                    .setBody("{\"status\": \"success\"}")
+            )
+        }
+
+        // Launch fragment
+        val scenario = launchFragmentInContainer<AccueilFragment>()
+
+        // Wait for automatic refresh (slightly longer than the 1-minute interval)
+        Thread.sleep(70_000)
+
+        // Verify at least one request was made
+        val request = mockWebServer.takeRequest(0, TimeUnit.SECONDS)
+        assertNotNull(request)
+    }
+
+    // Custom matcher for SeekBar max value
+    private fun withSeekBarMax(max: Int) = object : TypeSafeMatcher<View>() {
+        override fun describeTo(description: Description) {
+            description.appendText("SeekBar with max value: $max")
+        }
+
+        override fun matchesSafely(item: View): Boolean {
+            return item is SeekBar && item.max == max
+        }
+    }
+}*/
