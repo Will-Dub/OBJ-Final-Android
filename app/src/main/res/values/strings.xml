@@ -36,6 +36,7 @@
     <string name="actif">Actif</string>
     <string name="supprimer">Supprimer</string>
     <string name="choisir">Choisir</string>
+    <string name="hh_mm">hh:mm</string>
 
     <string-array name="pref_fetch_values">
         <item>1 minutes</item>

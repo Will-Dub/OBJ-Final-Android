@@ -18,14 +18,110 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layout_donnees"
+        android:id="@+id/layout_temperature"
         android:layout_width="0dp"
-        android:layout_height="130dp"
+        android:layout_height="0dp"
         android:layout_marginStart="5dp"
-        android:layout_marginTop="10dp"
         android:layout_marginEnd="5dp"
+        android:layout_weight="1"
         android:background="@drawable/customborder"
+        app:layout_constraintBottom_toBottomOf="@+id/layout_donnees"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/layout_donnees"
+        app:layout_constraintTop_toTopOf="@+id/layout_donnees">
+
+        <TextView
+            android:id="@+id/tv_temperature_titre"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/temp_rature_titre"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/tv_temperature_titre"
+            app:layout_constraintStart_toStartOf="@+id/tv_temperature_titre"
+            app:layout_constraintTop_toBottomOf="@+id/tv_temperature_titre">
+
+            <TextView
+                android:id="@+id/tv_temperature_type_f"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center|right"
+                android:text="@string/temperature_type_f"
+                android:textSize="18sp" />
+
+            <Switch
+                android:id="@+id/switch_temperature_type"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:scaleX="1.5"
+                android:scaleY="1.5"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+            <TextView
+                android:id="@+id/tv_temperature_type_c"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center|left"
+                android:text="@string/temperature_type_c"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_led"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/customborder"
+        app:layout_constraintBottom_toBottomOf="@+id/layout_ventilation"
+        app:layout_constraintEnd_toEndOf="@+id/layout_temperature"
+        app:layout_constraintStart_toStartOf="@+id/layout_temperature"
+        app:layout_constraintTop_toTopOf="@+id/layout_ventilation">
+
+        <TextView
+            android:id="@+id/tv_couleur_led"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/couleur_led_titre"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/btn_modifier_couleur"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:text="@string/modifier_la_couleur"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/tv_couleur_led"
+            app:layout_constraintStart_toStartOf="@+id/tv_couleur_led"
+            app:layout_constraintTop_toBottomOf="@+id/tv_couleur_led" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_donnees"
+        android:layout_width="406dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/customborder"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_titre_vue_accueil">
 
@@ -34,7 +130,6 @@
             android:id="@+id/tv_donnees"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
             android:text="@string/donnees"
             android:textSize="24sp"
             android:textStyle="bold"
@@ -67,10 +162,11 @@
             android:id="@+id/tv_humidite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="65dp"
             android:hint="@string/humidite_titre"
             android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="@+id/tv_temperature"
-            app:layout_constraintTop_toBottomOf="@+id/tv_temperature" />
+            app:layout_constraintStart_toEndOf="@+id/tv_temperature"
+            app:layout_constraintTop_toTopOf="@+id/tv_temperature" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -80,6 +176,7 @@
         android:layout_height="100dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/customborder"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/layout_donnees"
         app:layout_constraintStart_toStartOf="@+id/layout_donnees"
         app:layout_constraintTop_toBottomOf="@+id/layout_donnees">
@@ -150,120 +247,5 @@
             app:layout_constraintTop_toBottomOf="@+id/tv_ventilation_vitesse" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <LinearLayout
-        android:id="@+id/ll_led_temp"
-        android:layout_width="0dp"
-        android:layout_height="120dp"
-        android:layout_marginTop="10dp"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="@+id/layout_ventilation"
-        app:layout_constraintStart_toStartOf="@+id/layout_ventilation"
-        app:layout_constraintTop_toBottomOf="@+id/layout_ventilation">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/layout_led"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@drawable/customborder">
-
-            <TextView
-                android:id="@+id/tv_couleur_led"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/couleur_led_titre"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/btn_modifier_couleur"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:text="@string/modifier"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/tv_couleur_led"
-                app:layout_constraintStart_toStartOf="@+id/tv_couleur_led"
-                app:layout_constraintTop_toBottomOf="@+id/tv_couleur_led" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.05" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/layout_temperature"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@drawable/customborder">
-
-            <TextView
-                android:id="@+id/tv_temperature_titre"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/temp_rature_titre"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:orientation="horizontal"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/tv_temperature_titre"
-                app:layout_constraintStart_toStartOf="@+id/tv_temperature_titre"
-                app:layout_constraintTop_toBottomOf="@+id/tv_temperature_titre">
-
-                <TextView
-                    android:id="@+id/tv_temperature_type_f"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center|right"
-                    android:text="@string/temperature_type_f"
-                    android:textSize="18sp" />
-
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-                <Switch
-                    android:id="@+id/switch_temperature_type"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="2"
-                    android:scaleX="1.5"
-                    android:scaleY="1.5"
-                    tools:ignore="UseSwitchCompatOrMaterialXml" />
-
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
-                <TextView
-                    android:id="@+id/tv_temperature_type_c"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center|left"
-                    android:text="@string/temperature_type_c"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
